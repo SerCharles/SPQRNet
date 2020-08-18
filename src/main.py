@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -10,95 +8,154 @@ from models.discriminator import Discriminator
 from models.decoder import Decoder
 from data.scannet_loader import ScanNetLoader
 from data.shapenet_loader import ShapeNetLoader
+from torch.utils.data import DataLoader
+import constants
+chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
+
+
+
+
+def initialize():
+    '''
+        description: initialize models, data, optimizer
+        variable: empty
+        return: device, G, D, decoder, criterion, optimizer_g, optimizer_d, optimizer_decoder, data_loader_scannet_train, data_loader_scannet_val, data_loader_shapenet_train, data_loader_shapenet_val
+    '''
+    print('getting device...', end='')
+    device = torch.device('cuda:8')
+    torch.cuda.empty_cache()
+    print('device got')
+
+    print('Initialize model')
+    G = Generator()
+    D = Discriminator()
+    decoder = Decoder()
+    print('Getting dataset')
+    dataset_scannet_train = ScanNetLoader(constants.scannet_place, 'train', constants.scannet_type_name, 2048)
+    dataset_scannet_val = ScanNetLoader(constants.scannet_place, 'val', constants.scannet_type_name, 2048)
+    dataset_shapenet_train = ShapeNetLoader(constants.shapenet_place, 'train', constants.shapenet_type_code, 512)
+    dataset_shapenet_val = ShapeNetLoader(constants.shapenet_place, 'val', constants.shapenet_type_code, 512)
+    print('Getting dataloader')
+    data_loader_scannet_train = DataLoader(dataset_scannet_train, batch_size = constants.batch_size_scannet, shuffle = True, num_workers = 2)
+    data_loader_scannet_val = DataLoader(dataset_scannet_val, batch_size = constants.batch_size_scannet, shuffle = True, num_workers = 2)
+    data_loader_shapenet_train =  DataLoader(dataset_shapenet_train, batch_size = constants.batch_size_shapenet, shuffle = True, num_workers = 2)
+    data_loader_shapenet_val = DataLoader(dataset_shapenet_val, batch_size = constants.batch_size_shapenet, shuffle = True, num_workers = 2)
+    print('Data got!')
+    if device:
+        G.to(device)
+        D.to(device)
+        decoder.to(device)
+    criterion = nn.BCELoss()
+    optimizer_d = torch.optim.Adam(D.parameters(), lr = constants.d_learning_rate)
+    optimizer_g = torch.optim.Adam(G.parameters(), lr = constants.g_learning_rate)
+    optimizer_decoder = torch.optim.Adam(decoder.parameters(), lr = constants.decoder_learning_rate)
+
+    return device, G, D, decoder, criterion, optimizer_g, optimizer_d, optimizer_decoder, data_loader_scannet_train, data_loader_scannet_val, data_loader_shapenet_train, data_loader_shapenet_val
+
+
+def train_GAN(device, G, D, criterion, optimizer_g, optimizer_d, data_loader_scannet_train, data_loader_shapenet_train):
+    '''
+        description: train GAN
+        variable: device, G, D, criterion, optimizer_g, optimizer_d, data_loader_scannet_train, data_loader_shapenet_train
+        return: G,D
+    '''
+    print("Training GAN", "*" * 100)
+    for epoch in range(constants.num_epochs_GAN):
+        print("this is epoch ", epoch)
+        for d_index in range(constants.d_steps):
+            # 1. Train D on real+fake
+            D.zero_grad()
+            D.train()
+            G.eval()
+            for i, ((data_shapenet, _, _),(data_scannet)) in enumerate(zip(data_loader_shapenet_train, data_loader_scannet_train)):
+                if device:
+                    data_shapenet = data_shapenet.to(device)
+                    data_scannet = data_scannet.to(device)
+                
+                decision_shapenet, decision_scannet = G(data_shapenet, data_scannet)
+                d_real_error = criterion(decision_shapenet, Variable(torch.ones([decision_shapenet.size(0),1])))  # ones = true
+                d_real_error.backward() # compute/store gradients, but don't change params
+                d_fake_error = criterion(decision_scannet, Variable(torch.zeros([decision_scannet.size(0),1])))  # zeros = fake
+                d_fake_error.backward()
+                optimizer_d.step()
+
+        for g_index in range(constants.g_steps):
+            # 2. Train G on D's response (but DO NOT train D on these labels)
+            G.zero_grad()
+            G.train()
+            D.eval()
+            for i, ((data_shapenet, _, _),(data_scannet)) in enumerate(zip(data_loader_shapenet_train, data_loader_scannet_train)):
+                if device:
+                    data_shapenet = data_shapenet.to(device)
+                    data_scannet = data_scannet.to(device)
+                
+                decision_shapenet, decision_scannet = G(data_shapenet, data_scannet)
+                g_error_a = criterion(decision_scannet, Variable(torch.ones([decision_scannet.size(0),1])))  # Train G to pretend it's genuine
+                g_error_a.backward()
+                g_error_b = criterion(decision_shapenet, Variable(torch.zeros([decision_shapenet.size(0),1])))  # Train G to pretend it's genuine
+                g_error_b.backward()
+                optimizer_g.step()  # Only optimizes G's parameters
+    return G, D
+
+def train_Decoder(device, G, decoder, optimizer_decoder, data_loader_shapenet_train):
+    '''
+        description: train Decoder
+        variable: device, G, decoder, optimizer_decoder, data_loader_shapenet_train
+        return: decoder
+    '''
+    best_train_dis = 114514
+    print("Training Decoder", "*" * 100)
+    decoder.train()
+    G.eval()
+    for epoch in range(constants.num_epochs_decoder):
+        for i, (the_data, ground_truth_fine, ground_truth_coarse) in enumerate(data_loader_shapenet_train):
+            if device:
+                the_data = the_data.to(device)
+                ground_truth_fine = ground_truth_fine.to(device)
+                ground_truth_coarse = ground_truth_coarse.to(device)
+            the_feature = G.get_x_result(the_data)
+            coarse, fine = decoder(the_feature)
+            dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
+            dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
+            dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, ground_truth_coarse)
+            dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
+            dis = dis_fine + 0.5 * dis_coarse
+            optimizer_decoder.zero_grad()
+            dis.backward()
+            optimizer_decoder.step()
+            print('epoch:[{}/{}] batch {}, dis: {}'.format(epoch, epochs, i+1, dis.item() * 10000))
+    return decoder
+
+
+def valid(device, G, decoder, data_loader_scannet_val, data_loader_shapenet_val):
+    '''
+        description: valid entire network
+        variable: device, G, decoder, data_loader_scannet_val, data_loader_shapenet_val
+        return: empty
+    '''
+    print("Validing", "*" * 100)
+    G.eval()
+    decoder.eval()
+    for i, (the_data, ground_truth_fine, ground_truth_coarse) in enumerate(data_loader_shapenet_val):
+        if device:
+            the_data = the_data.to(device)
+            ground_truth_fine = ground_truth_fine.to(device)
+            ground_truth_coarse = ground_truth_coarse.to(device)
+        the_feature = G.get_x_result(the_data)
+        coarse, fine = decoder(the_feature)
+        dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
+        dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
+        dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, ground_truth_coarse)
+        dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
+        dis = dis_fine + 0.5 * dis_coarse
+        print('epoch:[{}/{}] batch {}, dis: {}'.format(epoch, epochs, i+1, dis.item() * 10000))
+
+
+
 
 
 if __name__ == "__main__":
-    
-    dataset_scannet = ScanNetLoader('E:\\dataset\\scannet_extract', 'val', 'chair')
-    dataset_shapenet = ShapeNetLoader('E:\\dataset\\shapenet', 'val', '03001627', 512)
-    print('getting dataloader')
-    data_loader_scannet = DataLoader(dataset_scannet, batch_size=8, shuffle=True, num_workers=2)
-    data_loader_shapenet = DataLoader(dataset_shapenet, batch_size=8, shuffle=True, num_workers=2)
-
-    print('data got!')
-
-
-    for i, (the_data) in enumerate(data_loader_scannet):
-        print(i)
-        print(the_data.shape())
-
-    for i, (the_data, ground_truth_fine, ground_truth_coarse) in enumerate(data_loader_shapenet):
-        print(i)
-        print(the_data.shape())
-        print(ground_truth_fine.size())
-        print(ground_truth_coarse.size())
-'''
-
-def train():
-    d_learning_rate = 1e-3
-    g_learning_rate = 1e-3
-    sgd_momentum = 0.9
-
-    num_epochs = 5000
-    print_interval = 100
-    d_steps = 20
-    g_steps = 20
-
-    G = Generator(1024, 256)
-    D = Discriminator(256)
-    criterion = nn.BCELoss()  # Binary cross entropy: http://pytorch.org/docs/nn.html#bceloss
-    d_optimizer = optim.SGD(D.parameters(), lr=d_learning_rate, momentum=sgd_momentum)
-    g_optimizer = optim.SGD(G.parameters(), lr=g_learning_rate, momentum=sgd_momentum)
-
-    for epoch in range(num_epochs):
-        for d_index in range(d_steps):
-            # 1. Train D on real+fake
-            D.zero_grad()
-
-            #  1A: Train D on real
-            d_real_data = Variable(d_sampler(d_input_size))
-            d_real_decision = D(preprocess(d_real_data))
-            d_real_error = criterion(d_real_decision, Variable(torch.ones([1,1])))  # ones = true
-            d_real_error.backward() # compute/store gradients, but don't change params
-
-            #  1B: Train D on fake
-            d_gen_input = Variable(gi_sampler(minibatch_size, g_input_size))
-            d_fake_data = G(d_gen_input).detach()  # detach to avoid training G on these labels
-            d_fake_decision = D(preprocess(d_fake_data.t()))
-            d_fake_error = criterion(d_fake_decision, Variable(torch.zeros([1,1])))  # zeros = fake
-            d_fake_error.backward()
-            d_optimizer.step()     # Only optimizes D's parameters; changes based on stored gradients from backward()
-
-            dre, dfe = extract(d_real_error)[0], extract(d_fake_error)[0]
-
-        for g_index in range(g_steps):
-            # 2. Train G on D's response (but DO NOT train D on these labels)
-            G.zero_grad()
-
-            gen_input = Variable(gi_sampler(minibatch_size, g_input_size))
-            g_fake_data = G(gen_input)
-            dg_fake_decision = D(preprocess(g_fake_data.t()))
-            g_error = criterion(dg_fake_decision, Variable(torch.ones([1,1])))  # Train G to pretend it's genuine
-
-            g_error.backward()
-            g_optimizer.step()  # Only optimizes G's parameters
-            ge = extract(g_error)[0]
-
-        if epoch % print_interval == 0:
-            print("Epoch %s: D (%s real_err, %s fake_err) G (%s err); Real Dist (%s),  Fake Dist (%s) " %
-                  (epoch, dre, dfe, ge, stats(extract(d_real_data)), stats(extract(d_fake_data))))
-
-    if matplotlib_is_available:
-        print("Plotting the generated distribution...")
-        values = extract(g_fake_data)
-        print(" Values: %s" % (str(values)))
-        plt.hist(values, bins=50)
-        plt.xlabel('Value')
-        plt.ylabel('Count')
-        plt.title('Histogram of Generated Distribution')
-        plt.grid(True)
-        plt.show()
-
-
-train()
-'''
+    device, G, D, decoder, criterion, optimizer_g, optimizer_d, optimizer_decoder, data_loader_scannet_train, data_loader_scannet_val, data_loader_shapenet_train, data_loader_shapenet_val = initialize()
+    G, D = train_GAN(device, G, D, criterion, optimizer_g, optimizer_d, data_loader_scannet_train, data_loader_shapenet_train)
+    decoder = train_Decoder(device, G, decoder, optimizer_decoder, data_loader_shapenet_train)
+    valid(device, G, decoder, data_loader_scannet_val, data_loader_shapenet_val)

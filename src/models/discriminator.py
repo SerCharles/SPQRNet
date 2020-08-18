@@ -24,10 +24,10 @@ class Discriminator(nn.Module):
         #shared mlp0:1d conv
         self.mlp = nn.Sequential(
             nn.Linear(in_features = self.in_size, out_features = 128, bias = True),
-            torch.tanh(),
+            torch.sigmoid(),
             nn.Linear(in_features = 128, out_features = 64, bias = True),
-            torch.tanh(),
-            nn.Linear(in_features = 64, out_features = 2, bias = True),
+            torch.sigmoid(),
+            nn.Linear(in_features = 64, out_features = 1, bias = True),
         )
         
 

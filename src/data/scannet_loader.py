@@ -58,7 +58,7 @@ class ScanNetLoader(Dataset):
         self.partial = torch.stack(partial_list, 0)
 
     def __len__(self):
-        return self.gt.shape[0]
+        return self.partial.shape[0]
 
     def __getitem__(self, idx):
         return self.partial[idx]

@@ -36,3 +36,7 @@ class Generator(nn.Module):
         feature_labeled = self.projector_labeled(self.encoder_labeled(labeled_x))
         feature_unlabeled = self.projector_unlabeled(self.encoder_unlabeled(unlabeled_x))
         return feature_labeled, feature_unlabeled
+
+    def get_x_result(self, labeled_x):
+        feature_labeled = self.projector_labeled(self.encoder_labeled(labeled_x))
+        return feature_labeled
