@@ -8,8 +8,8 @@ Data:8/17/2020
 import torch 
 import torch.nn as nn
 import torchvision
-from encoder import Encoder
-from projector import Projector
+from models.encoder import Encoder
+from models.projector import Projector
 
 class Generator(nn.Module):
     '''

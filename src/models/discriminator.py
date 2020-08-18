@@ -10,7 +10,7 @@ import torch.nn as nn
 import torchvision
 
 
-class Discrimiator(nn.Module):
+class Discriminator(nn.Module):
     '''
     参数:
         in_size：输入的数据维数，比如参数1024，则输入b*1024维

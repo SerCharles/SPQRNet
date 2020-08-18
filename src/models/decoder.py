@@ -35,7 +35,7 @@ class Decoder(nn.Module):
         )
         
         #folding_mlp:1d conv
-        self.folding_mlp = nn.Sequential()
+        self.folding_mlp = nn.Sequential(
             nn.Conv1d(in_channels = 1024 + 3 + 2, out_channels = 512, kernel_size = 1),
             nn.ReLU(inplace = True),
             nn.Conv1d(in_channels = 512, out_channels = 512, kernel_size = 1),

@@ -1,8 +1,5 @@
-#!/usr/bin/env python
 
-# Generative Adversarial Networks (GAN) example in PyTorch. Tested with PyTorch 0.4.1, Python 3.6.7 (Nov 2018)
-# See related blog post at https://medium.com/@devnag/generative-adversarial-networks-gans-in-50-lines-of-code-pytorch-e81b79659e3f#.sch4xgsa9
-'''
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -11,7 +8,31 @@ from torch.autograd import Variable
 from models.generator import Generator
 from models.discriminator import Discriminator
 from models.decoder import Decoder
+from data.scannet_loader import ScanNetLoader
+from data.shapenet_loader import ShapeNetLoader
 
+
+if __name__ == "__main__":
+    
+    dataset_scannet = ScanNetLoader('E:\\dataset\\scannet_extract', 'val', 'chair')
+    dataset_shapenet = ShapeNetLoader('E:\\dataset\\shapenet', 'val', '03001627', 512)
+    print('getting dataloader')
+    data_loader_scannet = DataLoader(dataset_scannet, batch_size=8, shuffle=True, num_workers=2)
+    data_loader_shapenet = DataLoader(dataset_shapenet, batch_size=8, shuffle=True, num_workers=2)
+
+    print('data got!')
+
+
+    for i, (the_data) in enumerate(data_loader_scannet):
+        print(i)
+        print(the_data.shape())
+
+    for i, (the_data, ground_truth_fine, ground_truth_coarse) in enumerate(data_loader_shapenet):
+        print(i)
+        print(the_data.shape())
+        print(ground_truth_fine.size())
+        print(ground_truth_coarse.size())
+'''
 
 def train():
     d_learning_rate = 1e-3
