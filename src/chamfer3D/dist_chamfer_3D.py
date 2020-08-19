@@ -17,9 +17,7 @@ if not chamfer_found:
             "/".join(os.path.abspath(__file__).split('/')[:-1] + ["chamfer_cuda.cpp"]),
             "/".join(os.path.abspath(__file__).split('/')[:-1] + ["chamfer3D.cu"]),
             ])
-    
-    
-    print("Loaded JIT 3D CUDA chamfer distance")
+
 
 else:
     import chamfer_3D_sgl

@@ -20,18 +20,18 @@ class Projector(nn.Module):
     输出：b*out_size的投影后的特征
     '''
     def __init__(self, in_size = 1024, out_size = 256):
-        super(Encoder, self).__init__()
+        super(Projector, self).__init__()
         self.in_size = in_size
         self.out_size = out_size
 
         #shared mlp0:1d conv
         self.mlp = nn.Sequential(
             nn.Linear(in_features = self.in_size, out_features = 1024, bias = True),
-            torch.tanh(),
+            nn.LeakyReLU(),
             nn.Linear(in_features = 1024, out_features = 512, bias = True),
-            torch.tanh(),
+            nn.LeakyReLU(),
             nn.Linear(in_features = 512, out_features = out_size, bias = True),
-            torch.tanh()
+            nn.Tanh()
         )
         
 

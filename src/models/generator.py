@@ -20,7 +20,7 @@ class Generator(nn.Module):
     输出：有标投影特征，无标投影特征，都是b*project_size
     '''
     def __init__(self, feature_size = 1024, project_size = 256):
-        super(Encoder, self).__init__()
+        super(Generator, self).__init__()
         self.feature_size = feature_size
         self.project_size = project_size
 

@@ -18,16 +18,17 @@ class Discriminator(nn.Module):
     输出：b*2 分类结果
     '''
     def __init__(self, in_size = 256):
-        super(Encoder, self).__init__()
+        super(Discriminator, self).__init__()
         self.in_size = in_size
 
         #shared mlp0:1d conv
         self.mlp = nn.Sequential(
             nn.Linear(in_features = self.in_size, out_features = 128, bias = True),
-            torch.sigmoid(),
+            nn.Sigmoid(),
             nn.Linear(in_features = 128, out_features = 64, bias = True),
-            torch.sigmoid(),
+            nn.Sigmoid(),
             nn.Linear(in_features = 64, out_features = 1, bias = True),
+            nn.Sigmoid(),
         )
         
 

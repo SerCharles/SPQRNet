@@ -9,6 +9,7 @@ from models.decoder import Decoder
 from data.scannet_loader import ScanNetLoader
 from data.shapenet_loader import ShapeNetLoader
 from torch.utils.data import DataLoader
+import chamfer3D.dist_chamfer_3D
 import constants
 chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 
@@ -61,7 +62,8 @@ def train_GAN(device, G, D, criterion, optimizer_g, optimizer_d, data_loader_sca
     '''
     print("Training GAN", "*" * 100)
     for epoch in range(constants.num_epochs_GAN):
-        print("this is epoch ", epoch)
+        
+        print("Training discriminator")
         for d_index in range(constants.d_steps):
             # 1. Train D on real+fake
             D.zero_grad()
@@ -72,13 +74,23 @@ def train_GAN(device, G, D, criterion, optimizer_g, optimizer_d, data_loader_sca
                     data_shapenet = data_shapenet.to(device)
                     data_scannet = data_scannet.to(device)
                 
-                decision_shapenet, decision_scannet = G(data_shapenet, data_scannet)
-                d_real_error = criterion(decision_shapenet, Variable(torch.ones([decision_shapenet.size(0),1])))  # ones = true
+                feature_shapenet, feature_scannet = G(data_shapenet, data_scannet)
+                decision_shapenet = D(feature_shapenet)
+                decision_scannet = D(feature_scannet)
+                decision_true = torch.ones([decision_shapenet.size(0),1])
+                decision_true = decision_true.to(device)
+                decision_false = torch.zeros([decision_scannet.size(0),1])
+                decision_false = decision_false.to(device)
+                d_real_error = criterion(decision_shapenet, decision_true)  # ones = true
                 d_real_error.backward() # compute/store gradients, but don't change params
-                d_fake_error = criterion(decision_scannet, Variable(torch.zeros([decision_scannet.size(0),1])))  # zeros = fake
+                d_fake_error = criterion(decision_scannet, decision_false)  # zeros = fake
                 d_fake_error.backward()
                 optimizer_d.step()
-
+                #print(D.gradients())
+                mean_error = (torch.mean(d_fake_error) + torch.mean(d_fake_error)) / 2
+                print('Discriminator:epoch:[{}/{}] batch {}, error: {}'.format(epoch + 1, constants.num_epochs_GAN, i+1, mean_error))
+        
+        print("Training generator")
         for g_index in range(constants.g_steps):
             # 2. Train G on D's response (but DO NOT train D on these labels)
             G.zero_grad()
@@ -89,12 +101,21 @@ def train_GAN(device, G, D, criterion, optimizer_g, optimizer_d, data_loader_sca
                     data_shapenet = data_shapenet.to(device)
                     data_scannet = data_scannet.to(device)
                 
-                decision_shapenet, decision_scannet = G(data_shapenet, data_scannet)
-                g_error_a = criterion(decision_scannet, Variable(torch.ones([decision_scannet.size(0),1])))  # Train G to pretend it's genuine
+                feature_shapenet, feature_scannet = G(data_shapenet, data_scannet)
+                decision_shapenet = D(feature_shapenet)
+                decision_scannet = D(feature_scannet)
+                decision_true = torch.ones([decision_scannet.size(0),1])
+                decision_true = decision_true.to(device)
+                decision_false = torch.zeros([decision_shapenet.size(0),1])
+                decision_false = decision_false.to(device)
+                g_error_a = criterion(decision_scannet, decision_true)  # Train G to pretend it's genuine
                 g_error_a.backward()
-                g_error_b = criterion(decision_shapenet, Variable(torch.zeros([decision_shapenet.size(0),1])))  # Train G to pretend it's genuine
+                g_error_b = criterion(decision_shapenet, decision_false)  # Train G to pretend it's genuine
                 g_error_b.backward()
                 optimizer_g.step()  # Only optimizes G's parameters
+                #print(G.gradients())
+                mean_error = (torch.mean(g_error_a) + torch.mean(g_error_b)) / 2
+                print('Generator:epoch:[{}/{}] batch {}, error: {}'.format(epoch + 1, constants.num_epochs_GAN, i+1, mean_error))
     return G, D
 
 def train_Decoder(device, G, decoder, optimizer_decoder, data_loader_shapenet_train):
@@ -123,7 +144,7 @@ def train_Decoder(device, G, decoder, optimizer_decoder, data_loader_shapenet_tr
             optimizer_decoder.zero_grad()
             dis.backward()
             optimizer_decoder.step()
-            print('epoch:[{}/{}] batch {}, dis: {}'.format(epoch, epochs, i+1, dis.item() * 10000))
+            print('epoch:[{}/{}] batch {}, dis: {}'.format(epoch, constants.num_epochs_decoder, i+1, dis.item() * 10000))
     return decoder
 
 
