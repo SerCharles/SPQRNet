@@ -5,13 +5,14 @@ scannet_type_name = 'chair'
 shapenet_type_code = '03001627'
 
 #network details
-batch_size_shapenet = 8
-batch_size_scannet = 8
-d_learning_rate = 0.0001
-g_learning_rate = 0.0001
-decoder_learning_rate = 0.0001
+batch_size = 8
+learning_rate = 0.0001
 
-num_epochs_GAN = 10
+num_epochs_GAN = 100
 num_epochs_decoder = 100
 d_steps = 1
 g_steps = 1
+
+#triplet loss
+the_miu = 0
+the_lambda = 1

@@ -28,18 +28,18 @@ class Decoder(nn.Module):
         #mlp0
         self.mlp = nn.Sequential(
             nn.Linear(in_features = self.in_size, out_features = 1024, bias = True),
-            nn.ReLU(inplace = True),
+            nn.LeakyReLU(inplace = True),
             nn.Linear(in_features = 1024, out_features = 1024, bias = True),
-            nn.ReLU(inplace = True),
+            nn.LeakyReLU(inplace = True),
             nn.Linear(in_features = 1024, out_features = num_coarse * 3 , bias = True)
         )
         
         #folding_mlp:1d conv
         self.folding_mlp = nn.Sequential(
             nn.Conv1d(in_channels = 1024 + 3 + 2, out_channels = 512, kernel_size = 1),
-            nn.ReLU(inplace = True),
+            nn.LeakyReLU(inplace = True),
             nn.Conv1d(in_channels = 512, out_channels = 512, kernel_size = 1),
-            nn.ReLU(inplace = True),
+            nn.LeakyReLU(inplace = True),
             nn.Conv1d(in_channels = 512, out_channels = 3, kernel_size = 1)
         )
 
