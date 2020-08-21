@@ -4,15 +4,15 @@ import torch.nn as nn
 import torchvision
 import constants
 
-def random_sample(shapenet_partial, shapenet_fine, scannet):
+def random_sample(shapenet_partial, shapenet_fine):
     '''
         description: random sample the negative sample
-        parameters: shapenet_partial, shapenet_fine(positive), scannet
+        parameters: shapenet_partial, shapenet_fine(positive)
         return: negative sample
     '''
     batch_size = shapenet_partial.size(0)
-    batch_size_scannet = scannet.size(0)
-    select_range = 2 * batch_size - 2 + batch_size_scannet
+    #batch_size_scannet = scannet.size(0)
+    select_range = 2 * batch_size - 2
     negative_list = []
     for i in range(batch_size):
         negative = None
@@ -25,7 +25,7 @@ def random_sample(shapenet_partial, shapenet_fine, scannet):
             else:
                 negative = shapenet_partial[choice + 1].clone()
                 #print("partial", choice + 1)
-        elif choice < 2 * batch_size - 2:
+        else:
             if choice < i + batch_size - 1:
                 negative = shapenet_fine[choice - batch_size + 1].clone()
                 #print("fine", choice - batch_size + 1)
@@ -33,9 +33,6 @@ def random_sample(shapenet_partial, shapenet_fine, scannet):
                 negative = shapenet_fine[choice - batch_size + 2].clone()
                 #print("fine", choice - batch_size + 2)
 
-        else:
-            negative = scannet[choice - 2 * batch_size + 2].clone()
-            #print("scannet", choice - 2 * batch_size + 2)
         negative_list.append(negative)
     negative_torch = torch.stack(negative_list, dim = 0)
     return negative_torch
