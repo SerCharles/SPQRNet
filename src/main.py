@@ -11,6 +11,7 @@ from utils.triplet_loss import random_sample
 from torch.utils.data import DataLoader
 import chamfer3D.dist_chamfer_3D
 import constants
+from utils.triplet_loss import random_sample
 chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 
 
@@ -53,14 +54,79 @@ def initialize():
 
 
 
-def train
+def train(epoch, epochs, device, generator_partial, generator_complete, decoder, optimizer, data_loader_scannet_train, data_loader_shapenet_train):
+    '''
+        description: train the models for one epoch
+        variable: epoch, epochs, device, generator_partial, generator_complete, decoder, optimizer, data_loader_scannet_train, data_loader_shapenet_train
+        return: generator_partial, generator_complete, decoder, optimizer
+    '''
+    generator_partial.train()
+    generator_complete.train()
+    decoder.train()
 
+    for i, ((partial_shapenet, ground_truth_fine, ground_truth_coarse), partial_scannet)  in enumerate(zip(data_loader_shapenet_train, data_loader_scannet_train)):
+            if device:
+                partial_shapenet = the_data.to(device)
+                ground_truth_fine = ground_truth_fine.to(device)
+                ground_truth_coarse = ground_truth_coarse.to(device)
+                partial_scannet = partial_scannet.to(device)
+            
+            #triplet loss
+            negative_examples = random_sample(partial_shapenet, ground_truth_fine, partial_scannet)
+            feature_partial = generator_partial(partial_shapenet)
+            feature_positive = generator_complete(ground_truth_fine)
+            feature_negative = generator_complete(negative_examples)
+            triplet_loss = torch.nn.TripletMarginLoss(feature_partial, feature_positive, feature_negative)
 
+            #reconstruction loss
+            coarse, fine = decoder(feature_partial)
+            dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
+            dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
+            dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, ground_truth_coarse)
+            dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
+            dis = dis_fine + 0.5 * dis_coarse
+            
+            total_loss = triplet_loss + constants.times_reconstruction * dis
 
+            optimizer.zero_grad()
+            total_loss.backward()
+            optimizer.step()
 
-def valid
+            print('Train:epoch:[{}/{}] batch {}, dis: {}, triplet: {}'.format(epoch + 1, epochs, i+1, dis.item() * 10000, triplet_loss.item()))
+    return generator_partial, generator_complete, decoder, optimizer
+
+def valid(epoch, epochs, device, generator_partial, generator_complete, decoder,  data_loader_scannet_val, data_loader_shapenet_val):
+    '''
+        description: valid the models for one epoch
+        variable: epoch, epochs, device, generator_partial, generator_complete, decoder,  data_loader_scannet_val, data_loader_shapenet_val
+        return: empty
+    '''
+    
+    generator_partial.eval()
+    generator_complete.eval()
+    decoder.eval()
+
+    for i, ((partial_shapenet, ground_truth_fine, ground_truth_coarse), partial_scannet)  in enumerate(zip(data_loader_shapenet_val, data_loader_scannet_val)):
+            if device:
+                partial_shapenet = the_data.to(device)
+                ground_truth_fine = ground_truth_fine.to(device)
+                ground_truth_coarse = ground_truth_coarse.to(device)
+                partial_scannet = partial_scannet.to(device)
+            
+            feature_partial = generator_partial(partial_shapenet)
+            coarse, fine = decoder(feature_partial)
+            dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
+            dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
+            dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, ground_truth_coarse)
+            dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
+            dis = dis_fine + 0.5 * dis_coarse
+
+            print('Valid:epoch:[{}/{}] batch {}, dis: {}'.format(epoch + 1, epochs, i+1, dis.item() * 10000))    
 
 
 
 if __name__ == "__main__":
-
+    device, generator_partial, generator_complete, decoder, optimizer, data_loader_scannet_train, data_loader_scannet_val, data_loader_shapenet_train, data_loader_shapenet_val = initialize()
+    for epoch in range(constants.num_epochs):
+        generator_partial, generator_complete, decoder, optimizer = train(epoch, constants.num_epochs, device, generator_partial, generator_complete, decoder, optimizer, data_loader_scannet_train, data_loader_shapenet_train)
+        valid(epoch, constants.num_epochs, device, generator_partial, generator_complete, decoder,  data_loader_scannet_val, data_loader_shapenet_val)
