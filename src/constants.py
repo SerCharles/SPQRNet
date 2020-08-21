@@ -11,4 +11,4 @@ num_epochs = 100
 
 
 #multiple losses
-times_reconstruction = 1
+times_reconstruction = 30
