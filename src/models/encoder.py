@@ -12,10 +12,10 @@ import torchvision
 
 class Encoder(nn.Module):
     '''
-    参数:
+    Variables:
         out_size：输出的数据维数，比如参数1024，则输出b*1024维
-    输入：b*n*3的部分点云
-    输出：b*out_size的特征
+    Input：b*n*3的部分点云
+    Output：b*out_size的特征
     '''
     def __init__(self, out_size = 1024):
         super(Encoder, self).__init__()

@@ -11,10 +11,14 @@ num_epochs = 100
 
 
 #multiple losses
-times_reconstruction = 30
+times_triplet = 100
+triplet_margin = 1.0
 
 #saving place
-result_path = '../result/result.txt'
-model_path_partial = '../result/partial.pt'
-model_path_complete = '../result/complete.pt'
-model_path_decoder = '../result/decoder.pt'
+result_path = '../result/base'
+text_name_PCN = 'PCN.txt'
+text_name = 'result.txt'
+model_name_PCN = 'PCN.pt'
+model_name_partial = 'partial.pt'
+model_name_complete = 'complete.pt'
+model_name_decoder = 'decoder.pt'

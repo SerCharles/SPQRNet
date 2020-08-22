@@ -13,11 +13,11 @@ from models.projector import Projector
 
 class Generator(nn.Module):
     '''
-    参数:
+    Variables:
         feature_size:提取点云特征维数，如果是1024就b*1024
         project_size:投影特征维数，如果是256就b*256
-    输入：b*n1*3点云
-    输出：点云特征b*project_size
+    Input：b*n1*3点云
+    Output：点云特征b*project_size
     '''
     def __init__(self, feature_size = 1024, project_size = 256):
         super(Generator, self).__init__()

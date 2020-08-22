@@ -14,8 +14,8 @@ class Decoder(nn.Module):
         in_size：输入的特征维数，比如参数1024，则输入b*1024维
         grid_scale, grid_size: grid大小
         num_coarse:粗糙点云的个数，默认512.精细点云个数是num_coarse * grid_size * grid_size
-    输入：b*n*3的部分点云
-    输出：b*out_size的特征
+    输入：b*in_size的部分点云中间特征
+    输出：b*num_coarse*3的coarse点云和b*(num_coarse*grid_size^2)*3的fine点云
     '''
     def __init__(self, in_size = 1024, grid_scale = 0.05, grid_size = 2, num_coarse = 512):
         super(Decoder, self).__init__()
