@@ -63,6 +63,13 @@ optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, da
             triplet_loss = triplet_loss_function(feature_partial, feature_positive, feature_negative)
             the_times_triplet = args.times_triplet
         elif args.loss == 'cosine':
+            #归一化
+            if args.normalize == True:
+                feature_partial = torch.nn.functional.normalize(feature_partial, dim = 1)
+                feature_positive = torch.nn.functional.normalize(feature_positive, dim = 1)
+                feature_negative = torch.nn.functional.normalize(feature_negative, dim = 1)
+
+
             cosine_loss_function = torch.nn.CosineEmbeddingLoss(margin = args.margin_cosine)
             y_positive = torch.ones(feature_partial.size(0))
             y_negative = - torch.ones(feature_partial.size(0))
