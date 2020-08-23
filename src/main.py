@@ -135,6 +135,11 @@ def valid(args, epoch, epochs, device, generator_partial, generator_complete, de
             #partial_scannet = partial_scannet.to(device)
             
         feature_partial = generator_partial(partial_shapenet)
+        if args.loss == 'cosine':
+            #归一化
+            if args.normalize == True:
+                feature_partial = torch.nn.functional.normalize(feature_partial, dim = 1)
+
         coarse, fine = decoder(feature_partial)
         dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
         dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
