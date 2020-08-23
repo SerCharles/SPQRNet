@@ -41,10 +41,11 @@ def build_args():
     parser.add_argument('--scannet_path', type = str, default = constants.scannet_place, help = 'the path folder of scannet')
     parser.add_argument('--shapenet_path', type = str, default = constants.shapenet_place, help = 'the path folder of shapenet')
 
-
+    parser.add_argument('--loss', type = str, default = 'cosine', help = 'use which loss?')
     parser.add_argument('--times_triplet', type = int, default = constants.times_triplet, help = 'The ratio of triplet loss(after * 10000)')
-    parser.add_argument('--margin', type = float, default = constants.triplet_margin, help = 'The margin of triplet loss')
-
+    parser.add_argument('--margin_triplet', type = float, default = constants.triplet_margin, help = 'The margin of triplet loss')
+    parser.add_argument('--times_cosine', type = int, default = constants.times_cosine, help = 'The ratio of cosine loss(after * 10000)')
+    parser.add_argument('--margin_cosine', type = float, default = constants.cosine_margin, help = 'The margin of cosine loss')
     args = parser.parse_args()
 
     # Set the random seed manually for reproducibility.

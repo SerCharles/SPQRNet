@@ -51,14 +51,27 @@ optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, da
             ground_truth_coarse = ground_truth_coarse.to(device)
             #partial_scannet = partial_scannet.to(device)
             
-        #triplet loss
+        #medium feature
         negative_examples = random_sample(partial_shapenet, ground_truth_fine)
         feature_partial = generator_partial(partial_shapenet)
         feature_positive = generator_complete(ground_truth_fine)
         feature_negative = generator_complete(negative_examples)
-        triplet_loss_function = torch.nn.TripletMarginLoss(margin = args.margin, p = 2)
-        triplet_loss = triplet_loss_function(feature_partial, feature_positive, feature_negative)
 
+        #loss
+        if args.loss == 'triplet':
+            triplet_loss_function = torch.nn.TripletMarginLoss(margin = args.margin_triplet, p = 2)
+            triplet_loss = triplet_loss_function(feature_partial, feature_positive, feature_negative)
+            the_times_triplet = args.times_triplet
+        elif args.loss == 'cosine':
+            cosine_loss_function = torch.nn.CosineEmbeddingLoss(margin = args.margin_cosine)
+            y_positive = torch.ones(feature_partial.size(0))
+            y_negative = - torch.ones(feature_partial.size(0))
+            if device:
+                y_positive = y_positive.to(device)
+                y_negative = y_negative.to(device)
+            triplet_loss = cosine_loss_function(feature_partial, feature_positive, y_positive) + \
+                cosine_loss_function(feature_partial, feature_negative, y_negative)
+            the_times_triplet = args.times_cosine
 
         #reconstruction loss
         coarse, fine = decoder(feature_partial)
@@ -68,7 +81,7 @@ optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, da
         dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
         dis = dis_fine + 0.5 * dis_coarse
             
-        total_loss = triplet_loss * (args.times_triplet / 10000) + dis
+        total_loss = triplet_loss * (the_times_triplet / 10000) + dis
         total_dist += dis.item() * 10000
         total_triplet += triplet_loss.item()
         total_batch += 1

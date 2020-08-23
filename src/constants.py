@@ -19,6 +19,8 @@ num_epochs = 100
 #multiple losses
 times_triplet = 100
 triplet_margin = 1.0
+times_cosine = 100
+cosine_margin = 0.3
 
 #saving place
 result_path = '../result/base'
