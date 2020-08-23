@@ -1,3 +1,6 @@
+'''
+Copied from https://github.com/wentaoyuan/pcn
+'''
 
 
 from torch import nn

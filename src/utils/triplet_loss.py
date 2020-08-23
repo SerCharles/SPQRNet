@@ -1,3 +1,9 @@
+'''
+Description: Util functions of triplet loss
+Author:Charles Shen
+Date:8/20/2020
+'''
+
 import random
 import torch 
 import torch.nn as nn

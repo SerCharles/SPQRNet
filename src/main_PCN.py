@@ -1,3 +1,9 @@
+'''
+Description: Main program used in train and testing PCN
+Author:Charles Shen
+Date:8/20/2020
+'''
+
 import numpy as np
 import time
 import torch

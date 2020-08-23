@@ -16,12 +16,13 @@ from torch.utils.data import Dataset
 
 class ScanNetLoader(Dataset):
     '''
-    参数：
-        base_dir:数据集基本路径
-        data_type:训练还是测试,字符串
-        type_name:类型名称
-        num_points:点云个数
+    Variables：
+        base_dir: the file dir of scannet
+        data_type: string indicating train or val
+        type_name: the name of the type
+        num_coarse: the size of pointcloud input, which is 2048 by default
     '''
+
     def __init__(self, base_dir, data_type, type_name, num_points = 2048):
         dir_partial = os.path.join(base_dir, data_type, type_name)
         model_names = os.listdir(dir_partial)

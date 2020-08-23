@@ -1,7 +1,7 @@
 '''
-Description:The generator of the network
+Description: Original PCN Network
 Author:Charles Shen
-Data:8/17/2020
+Date:8/17/2020
 '''
 
 
@@ -14,13 +14,14 @@ from models.decoder import Decoder
 
 class PCN(nn.Module):
     '''
-    参数:
-        feature_size：中间的特征维数，比如参数1024，则中间特征b*1024维
-        grid_scale, grid_size: grid大小
-        num_coarse:粗糙点云的个数，默认512.精细点云个数是num_coarse * grid_size * grid_size
-    输入：b*n*3的点云
-    输出：b*out_size的特征
+        variables:
+            feature_size：the medium dimension of the data, 1024 means the output is b*1024
+            grid_scale, grid_size: grid info used in PCN folding
+            num_coarse: num of points of the coarse output pointcloud; num of the fine pointcloud is num_coarse * grid_size * grid_size
+        input: the partial pointcloud of b*n*3
+        output: coarse output(b * num_coarse * 3), fine output(b*(num_coarse*grid_size^2)*3)
     '''
+
     def __init__(self, feature_size = 1024, grid_scale = 0.05, grid_size = 2, num_coarse = 512):
         super(PCN, self).__init__()
         self.encoder = Encoder(out_size = feature_size)

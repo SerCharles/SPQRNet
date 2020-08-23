@@ -1,16 +1,22 @@
 '''
-绘制一个模型的训练，测试模型
+Description: Visualizing the results. After running the program, input
+                tensorboard --logdir runs
+            to see the result
+Author:Charles Shen
+Date:8/23/2020
 '''
 
-import matplotlib.pyplot as plt
 import os
+import argparse
 import numpy as np
 from tensorboardX import SummaryWriter
 
 class PlotCurves:
     def GetAccuracy(self, file):
         '''
-        描述：读取记录文件，获取训练测试准确率
+            Description: Input the result file
+            input: file dir
+            output: train and test results, in list
         '''
         y_train = []
         y_valid = []
@@ -30,6 +36,11 @@ class PlotCurves:
 
 
     def PlotTensorboard(self, y_train, y_valid):
+        '''
+            Description: print the train and valid curve of a model
+            input: train results, valid results
+            output: no
+        '''
         writer = SummaryWriter()
         for epoch in range(len(y_train)):
             writer.add_scalars('scalar/test', {"train" : y_train[epoch], "valid" : y_valid[epoch]}, epoch)
@@ -37,6 +48,11 @@ class PlotCurves:
         writer.close()
         
     def PlotContrast(self, ScalarList, length):
+        '''
+            Description: print the valid curves of a model
+            input: the Scalar list(ScalarList[name][epoch] means the result of the name of the model at the epoch), epoch nums
+            output: no
+        '''
         writer = SummaryWriter()
         for epoch in range(length):
             TheScalar = {}
@@ -46,44 +62,31 @@ class PlotCurves:
             #writer.add_scalar('scalar/test', y_valid, epoch)
         writer.close()
         
-    def __init__(self, model_list):
+    def __init__(self, result_dir):
+        '''
+            Description: main function
+            input: the result dir, which contains many txts indicating the result
+            output: no
+        '''
         super(PlotCurves, self).__init__()
-        ScalarList = {}
         length = -1
-        if len(model_list) == 1:
-            item = model_list[0]
-            model_name = item["model_name"]
-            model_dir = item["model_dir"]
-            log_place = "../result/" + model_dir + ".txt"
-            y_train, y_valid = self.GetAccuracy(log_place)
-            ScalarList["train"] = y_train
-            ScalarList["valid"] = y_valid
-            length = len(y_train)
-            self.PlotContrast(ScalarList, length)        
-        else:
-            for item in model_list:
-                model_name = item["model_name"]
-                model_dir = item["model_dir"]
-                log_place = "../result/" + model_dir + ".txt"
-                y_train, y_valid = self.GetAccuracy(log_place)
+        ScalarList = {}
+        for file_name in os.listdir(result_dir): 
+            split_name = file_name.split('.')
+            if len(split_name) == 2 and split_name[-1] == 'txt':
+                file_path = os.path.join(result_dir, file_name)
+                model_name = split_name[0]
+                y_train, y_valid = self.GetAccuracy(file_path)
                 if length < 0:
                     length = len(y_train)
                 ScalarList[model_name] = y_valid
-            #self.PlotModel(y_train, y_valid, model_name, save_place)
-            self.PlotContrast(ScalarList, length)
+        self.PlotContrast(ScalarList, length)
+
         
 if __name__ == '__main__':
-    PlotModel = []
-    Model0 = {"model_name":"PCN", "model_dir":"0"}
-    Model10 = {"model_name":"10", "model_dir":"10"}
-    Model100 = {"model_name":"100", "model_dir":"100"}
-    Model1000 = {"model_name":"1000", "model_dir":"1000"}
-    Model10000 = {"model_name":"10000", "model_dir":"10000"}
-
-    PlotModel.append(Model0)
-    PlotModel.append(Model10)
-    PlotModel.append(Model100)
-    PlotModel.append(Model1000)
-    PlotModel.append(Model10000)
-
-    PlotCurves(PlotModel)
+    parser = argparse.ArgumentParser(description = 'Plot')
+    parser.add_argument('--base', type = str, default = '../result', help='result base dir')
+    parser.add_argument('--dir', type = str, default = 'test', help='result specific dir')
+    args = parser.parse_args()
+    result_place = os.path.join(args.base, args.dir)
+    PlotCurves(result_place)

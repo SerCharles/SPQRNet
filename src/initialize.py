@@ -1,3 +1,9 @@
+'''
+Description: Initializing the arg parser and the models, optimizers, dataloaders...etc
+Author:Charles Shen
+Date:8/22/2020
+'''
+
 import argparse
 import numpy as np
 import time

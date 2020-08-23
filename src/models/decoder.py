@@ -1,7 +1,7 @@
 '''
 Description:The decoder of the Network, PCN Decoder
 Author:Charles Shen
-Data:8/17/2020
+Date:8/17/2020
 '''
 
 import torch 
@@ -10,12 +10,12 @@ import torchvision
 
 class Decoder(nn.Module):
     '''
-    参数:
-        in_size：输入的特征维数，比如参数1024，则输入b*1024维
-        grid_scale, grid_size: grid大小
-        num_coarse:粗糙点云的个数，默认512.精细点云个数是num_coarse * grid_size * grid_size
-    输入：b*in_size的部分点云中间特征
-    输出：b*num_coarse*3的coarse点云和b*(num_coarse*grid_size^2)*3的fine点云
+        variables:
+            in_size: the input dimension of the medium feature, 1024 means the input is b*1024
+            grid_scale, grid_size: grid info used in PCN folding
+            num_coarse: num of points of the coarse output pointcloud; num of the fine pointcloud is num_coarse * grid_size * grid_size
+        input: medium feature derived by the encoder, b*in_size
+        output: coarse output(b * num_coarse * 3), fine output(b*(num_coarse*grid_size^2)*3)
     '''
     def __init__(self, in_size = 1024, grid_scale = 0.05, grid_size = 2, num_coarse = 512):
         super(Decoder, self).__init__()

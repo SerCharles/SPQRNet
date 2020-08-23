@@ -1,7 +1,7 @@
 '''
 Description:The encoder of the both sides of the Network, PCN Encoder
 Author:Charles Shen
-Data:8/17/2020
+Date:8/17/2020
 '''
 
 import torch 
@@ -12,10 +12,10 @@ import torchvision
 
 class Encoder(nn.Module):
     '''
-    Variables:
-        out_size：输出的数据维数，比如参数1024，则输出b*1024维
-    Input：b*n*3的部分点云
-    Output：b*out_size的特征
+        variables:
+            out_size: the dimension of the output feature, 1024 means the output is b*1024
+        input: partial pointcloud, which is b*n*3
+        output: feature, which is b*out_size
     '''
     def __init__(self, out_size = 1024):
         super(Encoder, self).__init__()

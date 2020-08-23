@@ -1,3 +1,9 @@
+'''
+Description: constants
+Author:Charles Shen
+Date:8/17/2020
+'''
+
 #place of dataset
 scannet_place = '/home/shenguanlin/scannet_extract'
 shapenet_place = '/data1/xp/shapenet'

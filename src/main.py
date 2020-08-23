@@ -1,3 +1,9 @@
+'''
+Description: Main program used in train and testing my network
+Author:Charles Shen
+Date:8/22/2020
+'''
+
 import numpy as np
 import time
 import os

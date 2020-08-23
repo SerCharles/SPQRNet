@@ -15,11 +15,11 @@ from torch.utils.data import Dataset
 
 class ShapeNetLoader(Dataset):
     '''
-    参数：
-        base_dir:数据集基本路径
-        data_type:训练还是测试,字符串
-        type_code:类型码
-        num_coarse:粗糙点云的个数，用于生成粗糙点云gt
+    Variables：
+        base_dir: the file dir of shapenet
+        data_type: string indicating train or val
+        type_code: typecode of the type
+        num_coarse: num of coarse pointcloud, used in deriving coarse gt
     '''
     def __init__(self, base_dir, data_type, type_code, num_coarse = 512):
         dir_gt = os.path.join(base_dir, data_type, 'gt', type_code)
