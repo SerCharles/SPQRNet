@@ -24,7 +24,18 @@ import constants
 from initialize import initialize, build_args
 chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 
-
+def get_chamfer_dist(coarse, fine, coarse_gt, fine_gt):
+    '''
+        description: get chamfer distance
+        variable: coarse, fine, coarse_gt, fine_gt
+        return: dis
+    '''
+    dis_fine1, dis_fine2, _, _ = chamLoss(fine, fine_gt)
+    dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
+    dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, coarse_gt)
+    dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
+    dis = dis_fine + 0.5 * dis_coarse
+    return dis
 
 def train(args, epoch, epochs, device, model, optimizer_PCN, data_loader_shapenet_train, result_dir_PCN):
     '''
@@ -44,11 +55,7 @@ def train(args, epoch, epochs, device, model, optimizer_PCN, data_loader_shapene
 
         #reconstruction loss
         coarse, fine = model(partial_shapenet)
-        dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
-        dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
-        dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, ground_truth_coarse)
-        dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
-        dis = dis_fine + 0.5 * dis_coarse
+        dis = get_chamfer_dist(coarse, fine, ground_truth_coarse, ground_truth_fine)
             
         total_dist += dis.item() * 10000
         total_batch += 1
@@ -84,11 +91,7 @@ def valid(args, epoch, epochs, device, model, data_loader_shapenet_val, best_dis
             ground_truth_coarse = ground_truth_coarse.to(device)
             
         coarse, fine = model(partial_shapenet)
-        dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
-        dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
-        dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, ground_truth_coarse)
-        dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
-        dis = dis_fine + 0.5 * dis_coarse
+        dis = get_chamfer_dist(coarse, fine, ground_truth_coarse, ground_truth_fine)
 
         total_dist += dis.item() * 10000
         total_batch += 1

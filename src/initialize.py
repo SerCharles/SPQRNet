@@ -47,6 +47,7 @@ def build_args():
     parser.add_argument('--times_cosine', type = int, default = constants.times_cosine, help = 'The ratio of cosine loss(after * 10000)')
     parser.add_argument('--margin_cosine', type = float, default = constants.cosine_margin, help = 'The margin of cosine loss')
     parser.add_argument('--normalize', type = bool, default = False, help = 'whether normalize feature before cosine loss or not')
+
     args = parser.parse_args()
 
     # Set the random seed manually for reproducibility.

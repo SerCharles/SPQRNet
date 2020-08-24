@@ -26,7 +26,18 @@ from utils.triplet_loss import random_sample
 chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 
 
-
+def get_chamfer_dist(coarse, fine, coarse_gt, fine_gt):
+    '''
+        description: get chamfer distance
+        variable: coarse, fine, coarse_gt, fine_gt
+        return: dis
+    '''
+    dis_fine1, dis_fine2, _, _ = chamLoss(fine, fine_gt)
+    dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
+    dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, coarse_gt)
+    dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
+    dis = dis_fine + 0.5 * dis_coarse
+    return dis
 
 def train(args, epoch, epochs, device, generator_partial, generator_complete, decoder, \
 optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, data_loader_shapenet_train, result_dir):
@@ -52,44 +63,43 @@ optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, da
             #partial_scannet = partial_scannet.to(device)
             
         #medium feature
-        negative_examples = random_sample(partial_shapenet, ground_truth_fine)
-        feature_partial = generator_partial(partial_shapenet)
-        feature_positive = generator_complete(ground_truth_fine)
+        anchor_examples, positive_examples, negative_examples = random_sample(partial_shapenet, ground_truth_fine)
+        feature_anchor = generator_partial(anchor_examples)
+        feature_positive = generator_complete(positive_examples)
         feature_negative = generator_complete(negative_examples)
 
         #loss
         if args.loss == 'triplet':
             triplet_loss_function = torch.nn.TripletMarginLoss(margin = args.margin_triplet, p = 2)
-            triplet_loss = triplet_loss_function(feature_partial, feature_positive, feature_negative)
+            triplet_loss = triplet_loss_function(feature_anchor, feature_positive, feature_negative)
             the_times_triplet = args.times_triplet
         elif args.loss == 'cosine':
             #归一化
             if args.normalize == True:
-                feature_partial = torch.nn.functional.normalize(feature_partial, dim = 1)
+                feature_anchor = torch.nn.functional.normalize(feature_anchor, dim = 1)
                 feature_positive = torch.nn.functional.normalize(feature_positive, dim = 1)
                 feature_negative = torch.nn.functional.normalize(feature_negative, dim = 1)
 
 
             cosine_loss_function = torch.nn.CosineEmbeddingLoss(margin = args.margin_cosine)
-            y_positive = torch.ones(feature_partial.size(0))
-            y_negative = - torch.ones(feature_partial.size(0))
+            y_positive = torch.ones(feature_anchor.size(0))
+            y_negative = - torch.ones(feature_anchor.size(0))
             if device:
                 y_positive = y_positive.to(device)
                 y_negative = y_negative.to(device)
-            triplet_loss = cosine_loss_function(feature_partial, feature_positive, y_positive) + \
-                cosine_loss_function(feature_partial, feature_negative, y_negative)
+            triplet_loss = cosine_loss_function(feature_anchor, feature_positive, y_positive) + \
+                cosine_loss_function(feature_anchor, feature_negative, y_negative)
             the_times_triplet = args.times_cosine
 
         #reconstruction loss
-        coarse, fine = decoder(feature_partial)
-        dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
-        dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
-        dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, ground_truth_coarse)
-        dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
-        dis = dis_fine + 0.5 * dis_coarse
+        coarse_anchor, fine_anchor = decoder(feature_anchor)
+        dis_anchor = get_chamfer_dist(coarse_anchor, fine_anchor, ground_truth_coarse, ground_truth_fine)
+
+        coarse_positive, fine_positive = decoder(feature_anchor)
+        dis_positive = get_chamfer_dist(coarse_positive, fine_positive, ground_truth_coarse, ground_truth_fine)
             
-        total_loss = triplet_loss * (the_times_triplet / 10000) + dis
-        total_dist += dis.item() * 10000
+        total_loss = triplet_loss * (the_times_triplet / 10000) + dis_anchor * 0.5 + dis_positive * 0.5
+        total_dist += min(dis_anchor.item(), dis_positive.item()) * 10000
         total_triplet += triplet_loss.item()
         total_batch += 1
 
@@ -102,7 +112,7 @@ optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, da
         optimizer_generator_partial.step()
         optimizer_decoder.step()
 
-        print('Train:epoch:[{}/{}] batch {}, dis: {:.2f}, triplet: {:.6f}'.format(epoch + 1, epochs, i+1, dis.item() * 10000, triplet_loss.item()))
+        print('Train:epoch:[{}/{}] batch {}, dis: {:.2f}, triplet: {:.6f}'.format(epoch + 1, epochs, i+1, min(dis_anchor.item(), dis_positive.item()) * 10000, triplet_loss.item()))
     
     avg_dist = total_dist / total_batch
     avg_triplet = total_triplet / total_batch
@@ -134,23 +144,23 @@ def valid(args, epoch, epochs, device, generator_partial, generator_complete, de
             ground_truth_coarse = ground_truth_coarse.to(device)
             #partial_scannet = partial_scannet.to(device)
             
-        feature_partial = generator_partial(partial_shapenet)
+        feature_anchor = generator_partial(partial_shapenet)
+        feature_positive = generator_complete(partial_shapenet)
         if args.loss == 'cosine':
             #归一化
             if args.normalize == True:
-                feature_partial = torch.nn.functional.normalize(feature_partial, dim = 1)
+                feature_anchor = torch.nn.functional.normalize(feature_anchor, dim = 1)
 
-        coarse, fine = decoder(feature_partial)
-        dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
-        dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
-        dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, ground_truth_coarse)
-        dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
-        dis = dis_fine + 0.5 * dis_coarse
+        coarse_anchor, fine_anchor = decoder(feature_anchor)
+        dis_anchor = get_chamfer_dist(coarse_anchor, fine_anchor, ground_truth_coarse, ground_truth_fine)
 
-        total_dist += dis.item() * 10000
+        coarse_positive, fine_positive = decoder(feature_positive)
+        dis_positive = get_chamfer_dist(coarse_positive, fine_positive, ground_truth_coarse, ground_truth_fine)
+
+        total_dist += min(dis_anchor.item(), dis_positive.item()) * 10000
         total_batch += 1
 
-        print('Valid:epoch:[{}/{}] batch {}, dis: {:.2f}'.format(epoch + 1, epochs, i+1, dis.item() * 10000))    
+        print('Valid:epoch:[{}/{}] batch {}, dis: {:.2f}'.format(epoch + 1, epochs, i+1, min(dis_anchor.item(), dis_positive.item()) * 10000))    
     
     avg_dist = total_dist / total_batch
     file = open(result_dir, "a")
