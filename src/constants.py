@@ -7,8 +7,20 @@ Date:8/17/2020
 #place of dataset
 scannet_place = '/home/shenguanlin/scannet_extract'
 shapenet_place = '/data1/xp/shapenet'
-scannet_type_name = 'chair'
-shapenet_type_code = '03001627'
+shapenet_complete_place = '/home/shenguanlin/shapenet_completion'
+type_name = 'chair'
+type_code = '03001627'
+
+types = {
+    "chair": "03001627",
+    "table": "04379243",
+    "sofa": "04256520",
+    "cabinet": "02933112",
+    "lamp": "03636649",
+    "car": "02958343",
+    "plane": "02691156",
+    "watercraft": "04530566"
+}
 
 #network details
 batch_size = 8

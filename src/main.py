@@ -143,7 +143,7 @@ def valid(args, epoch, epochs, device, generator_partial, generator_complete, de
             ground_truth_fine = ground_truth_fine.to(device)
             ground_truth_coarse = ground_truth_coarse.to(device)
             #partial_scannet = partial_scannet.to(device)
-            
+        
         feature_anchor = generator_partial(partial_shapenet)
         feature_positive = generator_complete(partial_shapenet)
         if args.loss == 'cosine':
