@@ -67,23 +67,5 @@
 
  
 
-## Scheme
 
-1. 完成实验计划，绘制网络图
-2. 看2017ACMMM - Adversarial Cross-Modal Retrieval，PCL的论文，源代码，实现网络
-3. 在shapenet训练，scannet测试，至少用椅子一类数据，得到对应的两组loss和可视化结果
-4. 用PCN在shapenet训练，scannet测试，得到结果进行对比
-5. 整理实验结果等，完成小学期答辩
-
-----------------------------保研分割线------------------------------
-
-1. encoder部分，尝试用最新的GRNet，MSN等方法，或者自己设计网络
-2. decoder部分，尝试用更新的基于CYCLEGAN的无监督方法
-3. concat部分，尝试attention等更多融合方法
-4. 多任务部分，尝试重建，Triplet loss等更多任务
-5. GAN部分，不同的辨别模式？cyclegan等更复杂的思路？
-6. Domain Adaption？Semi Supervised？辩经（bushi）
-7. 和最新的有监督方法对比
-8. 和最新的无监督方法对比
-9. 完成论文写作，实验数据整理，代码整理，投论文
 

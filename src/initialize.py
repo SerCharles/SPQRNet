@@ -16,7 +16,7 @@ from models.encoder import Encoder
 from models.decoder import Decoder
 from models.PCN import PCN
 from data.scannet_loader import ScanNetLoader
-from data.shapenet_loader import ShapeNetLoader
+from data.shapenet_loader import load_shapenet_type, load_shapenet_all
 from data.shapenet_complete_loader import init_shapenet_complete_data, init_shapenet_complete_data_all
 from utils.triplet_loss import random_sample
 from torch.utils.data import DataLoader
@@ -105,7 +105,8 @@ def initialize(args):
     print('Getting dataset')
     #dataset_scannet_train = ScanNetLoader(args.scannet_path, 'train', constants.scannet_type_name, 2048)
     #dataset_scannet_val = ScanNetLoader(args.scannet_path, 'val', constants.scannet_type_name, 2048)
-    dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data(args.shapenet_complete_path, constants.type_name, constants.type_code, 8)
+    dataset_shapenet_train, dataset_shapenet_val = load_shapenet_all(args.shapenet_path, constants.types, 512)
+    #dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data(args.shapenet_complete_path, constants.type_name, constants.type_code, 8)
     #dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data(args.shapenet_complete_path, constants.types, 8)
     print('Getting dataloader')
     #data_loader_scannet_train = DataLoader(dataset_scannet_train, batch_size = args.batch_size, shuffle = True, num_workers = 2)

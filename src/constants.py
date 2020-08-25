@@ -23,9 +23,9 @@ types = {
 }
 
 #network details
-batch_size = 8
+batch_size = 32
 learning_rate = 0.0001
-num_epochs = 100
+num_epochs = 60
 
 
 #multiple losses

@@ -24,7 +24,7 @@ import constants
 from initialize import initialize, build_args
 chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 
-def get_chamfer_dist(coarse, fine, coarse_gt, fine_gt):
+def get_chamfer_dist_train(coarse, fine, coarse_gt, fine_gt, epoch):
     '''
         description: get chamfer distance
         variable: coarse, fine, coarse_gt, fine_gt
@@ -34,7 +34,15 @@ def get_chamfer_dist(coarse, fine, coarse_gt, fine_gt):
     dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
     dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, coarse_gt)
     dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
-    dis = dis_fine + 0.5 * dis_coarse
+
+    if epoch < 10:
+        dis = 0.01 * dis_fine + dis_coarse
+    elif epoch < 20:
+        dis = 0.1 * dis_fine + dis_coarse
+    elif epoch < 50
+        dis = 0.5 * dis_fine + dis_coarse
+    else:
+        dis = dis_fine + dis_coarse
     return dis
 
 def train(args, epoch, epochs, device, model, optimizer_PCN, data_loader_shapenet_train, result_dir_PCN):
@@ -53,16 +61,17 @@ def train(args, epoch, epochs, device, model, optimizer_PCN, data_loader_shapene
             ground_truth_coarse = ground_truth_coarse.to(device)
             #partial_scannet = partial_scannet.to(device)
 
+        '''
         batch_size = partial_shapenet.size(0)
         num_partial = partial_shapenet.size(1)
         partial_shapenet = partial_shapenet.resize(batch_size * num_partial, partial_shapenet.size(2), partial_shapenet.size(3))
         ground_truth_fine = ground_truth_fine.repeat(num_partial, 1, 1)
         ground_truth_coarse = ground_truth_coarse.repeat(num_partial, 1, 1)
-
+        '''
 
         #reconstruction loss
         coarse, fine = model(partial_shapenet)
-        dis = get_chamfer_dist(coarse, fine, ground_truth_coarse, ground_truth_fine)
+        dis = get_chamfer_dist_train(coarse, fine, ground_truth_coarse, ground_truth_fine)
             
         total_dist += dis.item() * 10000
         total_batch += 1
@@ -97,15 +106,17 @@ def valid(args, epoch, epochs, device, model, data_loader_shapenet_val, best_dis
             ground_truth_fine = ground_truth_fine.to(device)
             ground_truth_coarse = ground_truth_coarse.to(device)
             
+        '''
         batch_size = partial_shapenet.size(0)
         num_partial = partial_shapenet.size(1)
         partial_shapenet = partial_shapenet.resize(batch_size * num_partial, partial_shapenet.size(2), partial_shapenet.size(3))
         ground_truth_fine = ground_truth_fine.repeat(num_partial, 1, 1)
         ground_truth_coarse = ground_truth_coarse.repeat(num_partial, 1, 1)
+        '''
 
-        
         coarse, fine = model(partial_shapenet)
-        dis = get_chamfer_dist(coarse, fine, ground_truth_coarse, ground_truth_fine)
+        dis_fine1, dis_fine2, _, _ = chamLoss(fine, fine_gt)
+        dis = torch.mean(dis_fine1) + torch.mean(dis_fine2)
 
         total_dist += dis.item() * 10000
         total_batch += 1

@@ -24,14 +24,14 @@ class Encoder(nn.Module):
         #shared mlp0:1d conv
         self.shared_mlp0 = nn.Sequential(
             nn.Conv1d(in_channels = 3, out_channels = 128, kernel_size = 1),
-            nn.LeakyReLU(inplace = True),
-            nn.Conv1d(in_channels =128, out_channels = 256, kernel_size = 1)
+            nn.ReLU(inplace = True),
+            nn.Conv1d(in_channels = 128, out_channels = 256, kernel_size = 1)
         )
         
         #shared mlp1:1d conv
         self.shared_mlp1 = nn.Sequential(
             nn.Conv1d(in_channels = 512, out_channels = 512, kernel_size = 1),
-            nn.LeakyReLU(inplace = True),
+            nn.ReLU(inplace = True),
             nn.Conv1d(in_channels = 512, out_channels = self.out_size, kernel_size = 1)
         )
 
