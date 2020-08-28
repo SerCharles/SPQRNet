@@ -1,10 +1,4 @@
-1.使用1个gt对应12个partial的数据集，训练PCN达到温欣的baseline（多种数据一起训练）
-
-结果：
-
-
-
-可视化结果：
+1.使用1个gt对应12个partial的数据集，训练PCN达到温欣的baseline（多种数据一起训练）（完成）
 
 
 
@@ -49,3 +43,4 @@
 6.参考siamese网络的encoder-decoder结构
 
  https://arxiv.org/abs/2001.09650， The Whole Is Greater Than the Sum of Its Nonrigid Parts
+

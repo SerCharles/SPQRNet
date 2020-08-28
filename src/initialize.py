@@ -50,6 +50,10 @@ def build_args():
     parser.add_argument('--margin_cosine', type = float, default = constants.cosine_margin, help = 'The margin of cosine loss')
     parser.add_argument('--normalize', type = bool, default = False, help = 'whether normalize feature before cosine loss or not')
 
+    parser.add_argument('--weight_anchor', type = float, default = constants.weight_anchor, help = 'The weight of anchor loss')
+    parser.add_argument('--weight_positive', type = float, default = constants.weight_positive, help = 'The weight of positive loss')
+    parser.add_argument('--weight_negative', type = float, default = constants.weight_negative, help = 'The weight of negative loss')
+
     args = parser.parse_args()
 
     # Set the random seed manually for reproducibility.
@@ -107,8 +111,8 @@ def initialize(args):
     #dataset_scannet_val = ScanNetLoader(args.scannet_path, 'val', constants.scannet_type_name, 2048)
     #dataset_shapenet_train, dataset_shapenet_val = load_shapenet_all(args.shapenet_path, constants.types, 512)
     #dataset_shapenet_train, dataset_shapenet_val = load_shapenet_type(args.shapenet_path, constants.type_code, 512)
-    #dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data(args.shapenet_complete_path, constants.type_name, constants.type_code, 8)
-    dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data_all(args.shapenet_complete_path, constants.types, 8)
+    dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data(args.shapenet_complete_path, constants.type_name, constants.type_code, 8)
+    #dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data_all(args.shapenet_complete_path, constants.types, 8)
     print('Getting dataloader')
     #data_loader_scannet_train = DataLoader(dataset_scannet_train, batch_size = args.batch_size, shuffle = True, num_workers = 2)
     #data_loader_scannet_val = DataLoader(dataset_scannet_val, batch_size = args.batch_size, shuffle = True, num_workers = 2)

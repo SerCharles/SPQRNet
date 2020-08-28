@@ -25,7 +25,7 @@ types = {
 #network details
 batch_size = 4
 learning_rate = 0.0001
-num_epochs = 150
+num_epochs = 100
 
 
 #multiple losses
@@ -33,6 +33,11 @@ times_triplet = 100
 triplet_margin = 1.0
 times_cosine = 100
 cosine_margin = 0.5
+
+#weight of reconstruction losses
+weight_anchor = 0.5
+weight_positive = 0.5
+weight_negative = 0
 
 #saving place
 result_path = '../result/base'
