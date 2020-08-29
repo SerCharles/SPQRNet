@@ -13,6 +13,9 @@ import torch.nn as nn
 import torch.optim as optim
 import chamfer3D.dist_chamfer_3D
 import constants
+from models.encoder import Encoder
+from models.decoder import Decoder
+from models.PCN import PCN
 chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 
 
@@ -66,4 +69,5 @@ def get_triplet_loss(feature_anchor, feature_positive, feature_negative, args, d
             cosine_loss_function(feature_anchor, feature_negative, y_negative)
         the_times_triplet = args.times_cosine
     return triplet_loss, the_times_triplet, feature_anchor, feature_positive, feature_negative
+
 
