@@ -22,24 +22,11 @@ from torch.utils.data import DataLoader
 import chamfer3D.dist_chamfer_3D
 import constants
 from initialize import initialize, build_args
-chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
+from utils.common import get_chamfer_dist_train, get_chamfer_dist_valid
 
-def get_chamfer_dist_train(coarse, fine, coarse_gt, fine_gt):
-    '''
-        description: get chamfer distance
-        variable: coarse, fine, coarse_gt, fine_gt
-        return: dis
-    '''
-    dis_fine1, dis_fine2, _, _ = chamLoss(fine, fine_gt)
-    dis_fine = torch.mean(dis_fine1) + torch.mean(dis_fine2)
-    dis_coarse1, dis_coarse2, _, _ = chamLoss(coarse, coarse_gt)
-    dis_coarse = torch.mean(dis_coarse1) + torch.mean(dis_coarse2)
 
-    dis = dis_fine + dis_coarse
-    return dis
-
-def train(args, epoch, epochs, device, model, optimizer_PCN, data_loader_shapenet_train, result_dir_PCN):
-    '''
+def train(args, epoch, epochs, device, model, optimizer_PCN,data_loader_shapenet_train, result_dir_PCN):
+    ''' 
         description: train the PCN model for one epoch
         variable: args, epoch, epochs, device, model, optimizer_PCN, data_loader_shapenet_train, result_dir_PCN
         return: model
@@ -106,10 +93,9 @@ def valid(args, epoch, epochs, device, model, data_loader_shapenet_val, best_dis
         ground_truth_fine = ground_truth_fine.repeat(num_partial, 1, 1)
         ground_truth_coarse = ground_truth_coarse.repeat(num_partial, 1, 1)
         
-
         coarse, fine = model(partial_shapenet)
-        dis_fine1, dis_fine2, _, _ = chamLoss(fine, ground_truth_fine)
-        dis = torch.mean(dis_fine1) + torch.mean(dis_fine2)
+        dis = get_chamfer_dist_valid(coarse, fine, ground_truth_coarse, ground_truth_fine)
+
 
         total_dist += dis.item() * 10000
         total_batch += 1
