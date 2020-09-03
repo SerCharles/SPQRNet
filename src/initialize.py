@@ -11,6 +11,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import ast
 from torch.autograd import Variable
 from models.encoder import Encoder
 from models.decoder import Decoder
@@ -35,20 +36,27 @@ def build_args():
     parser.add_argument('--lr', type = float, default = constants.learning_rate, help='set batch size')
 
     parser.add_argument('--seed', type = int, default = 1234, help='set random seed')
-    parser.add_argument('--cuda',  type = bool, default = True, help = 'use GPU or not')
+    parser.add_argument('--cuda',  type = ast.literal_eval, default = True, help = 'use GPU or not')
     parser.add_argument('--gpu_id', type = int, default = 8, help = 'GPU device id used')
 
     parser.add_argument('--result_path', type = str, default = constants.result_path, help = 'the path folder to save your result')
     parser.add_argument('--scannet_path', type = str, default = constants.scannet_place, help = 'the path folder of scannet')
     parser.add_argument('--shapenet_path', type = str, default = constants.shapenet_place, help = 'the path folder of shapenet')
     parser.add_argument('--shapenet_complete_path', type = str, default = constants.shapenet_complete_place, help = 'the path folder of shapenet complete')
+    parser.add_argument('--dataset', type = str, default = 'shapenet', help = 'use which?shapenet or complete?')
+    parser.add_argument('--all', type = ast.literal_eval, default = True, help = 'use all data or not')
+
+
 
     parser.add_argument('--loss', type = str, default = 'cosine', help = 'use which loss?')
     parser.add_argument('--times_triplet', type = int, default = constants.times_triplet, help = 'The ratio of triplet loss(after * 10000)')
     parser.add_argument('--margin_triplet', type = float, default = constants.triplet_margin, help = 'The margin of triplet loss')
     parser.add_argument('--times_cosine', type = int, default = constants.times_cosine, help = 'The ratio of cosine loss(after * 10000)')
     parser.add_argument('--margin_cosine', type = float, default = constants.cosine_margin, help = 'The margin of cosine loss')
-    parser.add_argument('--normalize', type = bool, default = False, help = 'whether normalize feature before cosine loss or not')
+    parser.add_argument('--normalize', type = ast.literal_eval, default = False, help = 'whether normalize feature before cosine loss or not')
+    parser.add_argument('--step', type = ast.literal_eval, default = True, help = 'Use step triplet weight')
+
+
 
     parser.add_argument('--weight_anchor', type = float, default = constants.weight_anchor, help = 'The weight of anchor loss')
     parser.add_argument('--weight_positive', type = float, default = constants.weight_positive, help = 'The weight of positive loss')
@@ -109,10 +117,16 @@ def initialize(args):
     print('Getting dataset')
     #dataset_scannet_train = ScanNetLoader(args.scannet_path, 'train', constants.scannet_type_name, 2048)
     #dataset_scannet_val = ScanNetLoader(args.scannet_path, 'val', constants.scannet_type_name, 2048)
-    #dataset_shapenet_train, dataset_shapenet_val = load_shapenet_all(args.shapenet_path, constants.types, 512)
-    #dataset_shapenet_train, dataset_shapenet_val = load_shapenet_type(args.shapenet_path, constants.type_code, 512)
-    dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data(args.shapenet_complete_path, constants.type_name, constants.type_code, 8)
-    #dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data_all(args.shapenet_complete_path, constants.types, 8)
+    if args.dataset == 'shapenet':
+        if args.all == True:
+            dataset_shapenet_train, dataset_shapenet_val = load_shapenet_all(args.shapenet_path, constants.types, 512)
+        else:
+            dataset_shapenet_train, dataset_shapenet_val = load_shapenet_type(args.shapenet_path, constants.type_code, 512)
+    else:
+        if args.all == True:
+            dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data_all(args.shapenet_complete_path, constants.types, 8)
+        else:
+            dataset_shapenet_train, dataset_shapenet_val = init_shapenet_complete_data(args.shapenet_complete_path, constants.type_name, constants.type_code, 8)
     print('Getting dataloader')
     #data_loader_scannet_train = DataLoader(dataset_scannet_train, batch_size = args.batch_size, shuffle = True, num_workers = 2)
     #data_loader_scannet_val = DataLoader(dataset_scannet_val, batch_size = args.batch_size, shuffle = True, num_workers = 2)

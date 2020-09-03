@@ -17,7 +17,7 @@ from models.decoder import Decoder
 from models.PCN import PCN
 from data.scannet_loader import ScanNetLoader
 from data.shapenet_loader import ShapeNetLoader
-from utils.triplet_loss import random_sample
+from utils.triplet_loss import random_sample, random_sample_original
 from torch.utils.data import DataLoader
 import chamfer3D.dist_chamfer_3D
 import constants
@@ -41,12 +41,12 @@ def train(args, epoch, epochs, device, model, optimizer_PCN,data_loader_shapenet
             ground_truth_coarse = ground_truth_coarse.to(device)
             #partial_scannet = partial_scannet.to(device)
 
-        
-        batch_size = partial_shapenet.size(0)
-        num_partial = partial_shapenet.size(1)
-        partial_shapenet = partial_shapenet.resize(batch_size * num_partial, partial_shapenet.size(2), partial_shapenet.size(3))
-        ground_truth_fine = ground_truth_fine.repeat(num_partial, 1, 1)
-        ground_truth_coarse = ground_truth_coarse.repeat(num_partial, 1, 1)
+        if args.dataset == 'complete':
+            batch_size = partial_shapenet.size(0)
+            num_partial = partial_shapenet.size(1)
+            partial_shapenet = partial_shapenet.resize(batch_size * num_partial, partial_shapenet.size(2), partial_shapenet.size(3))
+            ground_truth_fine = ground_truth_fine.repeat(num_partial, 1, 1)
+            ground_truth_coarse = ground_truth_coarse.repeat(num_partial, 1, 1)
         
 
         #reconstruction loss
@@ -86,12 +86,12 @@ def valid(args, epoch, epochs, device, model, data_loader_shapenet_val, best_dis
             ground_truth_fine = ground_truth_fine.to(device)
             ground_truth_coarse = ground_truth_coarse.to(device)
             
-        
-        batch_size = partial_shapenet.size(0)
-        num_partial = partial_shapenet.size(1)
-        partial_shapenet = partial_shapenet.resize(batch_size * num_partial, partial_shapenet.size(2), partial_shapenet.size(3))
-        ground_truth_fine = ground_truth_fine.repeat(num_partial, 1, 1)
-        ground_truth_coarse = ground_truth_coarse.repeat(num_partial, 1, 1)
+        if args.dataset == 'complete':
+            batch_size = partial_shapenet.size(0)
+            num_partial = partial_shapenet.size(1)
+            partial_shapenet = partial_shapenet.resize(batch_size * num_partial, partial_shapenet.size(2), partial_shapenet.size(3))
+            ground_truth_fine = ground_truth_fine.repeat(num_partial, 1, 1)
+            ground_truth_coarse = ground_truth_coarse.repeat(num_partial, 1, 1)
         
         coarse, fine = model(partial_shapenet)
         dis = get_chamfer_dist_valid(coarse, fine, ground_truth_coarse, ground_truth_fine)

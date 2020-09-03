@@ -70,4 +70,23 @@ def get_triplet_loss(feature_anchor, feature_positive, feature_negative, args, d
         the_times_triplet = args.times_cosine
     return triplet_loss, the_times_triplet, feature_anchor, feature_positive, feature_negative
 
-
+def step_weight(args, epoch, epochs, the_times_triplet):
+    '''
+        description: change the weight of triplet loss by epoch steps
+        variable: args, epoch, epochs, the_times_triplet
+        return: weight_triplet
+    '''
+    if args.step == False:
+        return the_times_triplet
+    else:
+        if epoch <= epochs * 0.2:
+            current_times_triplet = 0
+        elif epoch <= epochs * 0.4:
+            current_times_triplet = the_times_triplet * 0.25
+        elif epoch <= epochs * 0.6:
+            current_times_triplet = the_times_triplet * 0.5
+        elif epoch <= epochs * 0.8:
+            current_times_triplet = the_times_triplet * 0.75
+        else:
+            current_times_triplet = the_times_triplet
+    return current_times_triplet
