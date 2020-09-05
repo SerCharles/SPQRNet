@@ -115,8 +115,8 @@ def valid(args, epoch, epochs, device, model, data_loader_shapenet_val, best_dis
 
 if __name__ == "__main__":
     args = build_args()
-    device, generator_partial, generator_complete, decoder, pcn, optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, optimizer_PCN, \
-        data_loader_shapenet_train, data_loader_shapenet_val, result_dir_PCN, result_dir, model_dir_PCN, model_dir_partial, model_dir_complete, model_dir_decoder = initialize(args)
+    device, generator_partial, generator_complete, decoder, pcn, decoder_fused, optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, optimizer_PCN, optimizer_fused, \
+           data_loader_shapenet_train, data_loader_shapenet_val, result_dir_PCN, result_dir, model_dir_PCN, model_dir_partial, model_dir_complete, model_dir_decoder = initialize(args)
     try:
         os.remove(result_dir_PCN)
     except:

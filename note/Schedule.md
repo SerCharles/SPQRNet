@@ -48,9 +48,9 @@ Contrastive loss：todo，这周各种事情和考试，9.3再说
 
 #### 5.用之前的超参数，修改训练方式，比较结果（端到端，同时训练triplet类和decoder类；先不用triplet进行训练，然后迁移学习初始化，triplet finetune；先训练triplet和decoder，之后迁移学习初始化只训练decoder。。。。）
 
-todo，这周各种事情和考试，9.3再说
+有提升，但是不明显
 
-#### 
+![steps](/steps.png)
 
 
 

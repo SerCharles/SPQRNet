@@ -15,6 +15,7 @@ import ast
 from torch.autograd import Variable
 from models.encoder import Encoder
 from models.decoder import Decoder
+from models.fused_decoder import Decoder_fused
 from models.PCN import PCN
 from data.scannet_loader import ScanNetLoader
 from data.shapenet_loader import load_shapenet_type, load_shapenet_all
@@ -47,7 +48,6 @@ def build_args():
     parser.add_argument('--all', type = ast.literal_eval, default = True, help = 'use all data or not')
 
 
-
     parser.add_argument('--loss', type = str, default = 'cosine', help = 'use which loss?')
     parser.add_argument('--times_triplet', type = int, default = constants.times_triplet, help = 'The ratio of triplet loss(after * 10000)')
     parser.add_argument('--margin_triplet', type = float, default = constants.triplet_margin, help = 'The margin of triplet loss')
@@ -72,7 +72,7 @@ def initialize(args):
     '''
         description: initialize models, data, optimizer
         variable: args
-        return: device, generator_partial, generator_complete, decoder, pcn, optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, optimizer_PCN\
+        return: device, generator_partial, generator_complete, decoder, pcn, decoder_fused, optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, optimizer_PCN, optimizer_fused, \
            data_loader_shapenet_train, data_loader_shapenet_val, result_dir_PCN, result_dir, model_dir_PCN, model_dir_partial, model_dir_complete, model_dir_decoder
     '''
     print(args)
@@ -91,17 +91,20 @@ def initialize(args):
     generator_complete = Encoder()
     decoder = Decoder()
     pcn = PCN()
+    decoder_fused = Decoder_fused()
     if device:
         generator_partial.to(device)
         generator_complete.to(device)
         decoder.to(device)
         pcn.to(device)
+        decoder_fused.to(device)
 
     print('Getting optimizer')
     optimizer_generator_partial = torch.optim.Adam(generator_partial.parameters(), lr = args.lr)
     optimizer_generator_complete = torch.optim.Adam(generator_complete.parameters(), lr = args.lr)
     optimizer_decoder = torch.optim.Adam(decoder.parameters(), lr = args.lr)
     optimizer_PCN = torch.optim.Adam(pcn.parameters(), lr = args.lr)
+    optimizer_fused = torch.optim.Adam(decoder_fused.parameters(), lr = args.lr)
 
     print('Getting result dir')
     if not os.path.exists(args.result_path):
@@ -135,5 +138,5 @@ def initialize(args):
     print('Data got!')
 
 
-    return device, generator_partial, generator_complete, decoder, pcn, optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, optimizer_PCN, \
+    return device, generator_partial, generator_complete, decoder, pcn, decoder_fused, optimizer_generator_complete, optimizer_generator_partial, optimizer_decoder, optimizer_PCN, optimizer_fused, \
            data_loader_shapenet_train, data_loader_shapenet_val, result_dir_PCN, result_dir, model_dir_PCN, model_dir_partial, model_dir_complete, model_dir_decoder

@@ -90,3 +90,13 @@ def step_weight(args, epoch, epochs, the_times_triplet):
         else:
             current_times_triplet = the_times_triplet
     return current_times_triplet
+
+def show_parameters(model):
+    '''
+        description: print the parameters and grads of a model
+        variable: model
+        return: empty
+    '''
+    for name, parameter in model.named_parameters():
+        print(torch.norm(parameter))
+        print(torch.norm(parameter.grad))
