@@ -47,7 +47,7 @@ def build_args():
     parser.add_argument('--dataset', type = str, default = 'shapenet', help = 'use which?shapenet or complete?')
     parser.add_argument('--all', type = ast.literal_eval, default = True, help = 'use all data or not')
 
-
+    parser.add_argument('--sample', type = ast.literal_eval, default = False, help = 'use partial one as positive example or not')
     parser.add_argument('--loss', type = str, default = 'cosine', help = 'use which loss?')
     parser.add_argument('--times_triplet', type = int, default = constants.times_triplet, help = 'The ratio of triplet loss(after * 10000)')
     parser.add_argument('--margin_triplet', type = float, default = constants.triplet_margin, help = 'The margin of triplet loss')

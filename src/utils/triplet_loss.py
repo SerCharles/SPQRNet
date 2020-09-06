@@ -72,3 +72,39 @@ def random_sample_original(shapenet_partial, shapenet_fine):
 
     negative_torch = torch.stack(negative_list, dim = 0)
     return negative_torch
+
+def random_sample_with_self(shapenet_partial, shapenet_fine):
+    '''
+        description: random sample the negative sample, without coarse, used in shapenet
+        parameters: shapenet_partial, shapenet_fine
+        return: anchor_torch, positive_torch, negative_torch
+    '''
+    #batch_size_scannet = scannet.size(0)
+    anchor_list = []
+    negative_list = []
+    positive_list = []
+    batch_size = shapenet_partial.size(0)
+
+    for i in range(batch_size):
+        indice = random.randint(0, 1)
+        if indice == 0:
+            anchor_list.append(shapenet_fine[i])
+        else:
+            anchor_list.append(shapenet_partial[i])
+        indice = random.randint(0, 1)
+        if indice == 0:
+            positive_list.append(shapenet_fine[i])
+        else:
+            positive_list.append(shapenet_partial[i])
+        negative_choice = random.randint(0, batch_size - 2)
+        if negative_choice >= i:
+            negative_choice += 1
+        type_choice = random.randint(0, 1)
+        if type_choice == 0:
+            negative_list.append(shapenet_partial[negative_choice])
+        else:
+            negative_list.append(shapenet_fine[negative_choice])
+    anchor_torch = torch.stack(anchor_list, dim = 0)
+    positive_torch = torch.stack(positive_list, dim = 0)
+    negative_torch = torch.stack(negative_list, dim = 0)
+    return anchor_torch, positive_torch, negative_torch

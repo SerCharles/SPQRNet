@@ -77,6 +77,8 @@ class PlotCurves:
                 file_path = os.path.join(result_dir, file_name)
                 model_name = split_name[0]
                 y_train, y_valid = self.GetAccuracy(file_path)
+                min_valid = round(min(y_valid), 2)
+                print(model_name, min_valid)
                 if length < 0:
                     length = len(y_train)
                 ScalarList[model_name] = y_valid

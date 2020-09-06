@@ -17,7 +17,7 @@ from models.decoder import Decoder
 from models.PCN import PCN_fused
 from data.scannet_loader import ScanNetLoader
 from data.shapenet_loader import ShapeNetLoader
-from utils.triplet_loss import random_sample, random_sample_original
+from utils.triplet_loss import random_sample, random_sample_original, random_sample_with_self
 from torch.utils.data import DataLoader
 import chamfer3D.dist_chamfer_3D
 import constants
@@ -48,12 +48,19 @@ def train(args, epoch, epochs, device, generator_partial, generator_complete, de
             ground_truth_coarse = ground_truth_coarse.to(device)
             #partial_scannet = partial_scannet.to(device)
 
-   
-        negative_examples = random_sample_original(partial_shapenet, ground_truth_fine)
-        feature_anchor = generator_partial(partial_shapenet)
-        feature_positive = generator_complete(ground_truth_fine)
+        if args.sample == True:
+            anchor_examples, positive_examples, negative_examples = random_sample_with_self(partial_shapenet, ground_truth_fine)
+        else:
+            anchor_examples = partial_shapenet
+            positive_examples = ground_truth_fine
+            negative_examples = random_sample_original(partial_shapenet, ground_truth_fine)
+        feature_anchor = generator_partial(anchor_examples)
+        feature_positive = generator_complete(positive_examples)
         feature_negative = generator_complete(negative_examples)
 
+
+            
+    
         triplet_loss, the_times_triplet, feature_anchor, feature_positive, feature_negative = \
             get_triplet_loss(feature_anchor, feature_positive, feature_negative, args, device)
 

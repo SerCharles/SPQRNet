@@ -54,8 +54,8 @@ Contrastive loss：todo，这周各种事情和考试，9.3再说
 
 
 
-#### 6.参考siamese网络的encoder-decoder结构
+#### 6.参考siamese网络的decoder结构
 
- https://arxiv.org/abs/2001.09650， The Whole Is Greater Than the Sum of Its Nonrigid Parts
+目前过拟合，缺乏参考
 
-todo，这周各种事情和考试，9.3再说
+未来：用聚类作为参考（得推研之后了qwq）
